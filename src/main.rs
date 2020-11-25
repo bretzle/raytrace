@@ -49,7 +49,26 @@ fn main() {
 }
 
 fn ray_color(r: &Ray) -> Color {
+	let t = hit_sphere(Point3::from(0., 0., -1.), 0.5, r);
+	if t > 0.0 {
+		let n = Vec3::unit(r.at(t) - Vec3::from(0., 0., -1.));
+		return 0.5 * Color::from(n.x() + 1., n.y() + 1., n.z() + 1.);
+	}
 	let unit_direction = Vec3::unit(r.direction());
 	let t = 0.5 * (unit_direction.y() + 1.0);
 	(Color::from(1.0, 1.0, 1.0) * (1.0 - t)) + (Color::from(0.5, 0.7, 1.0) * t)
+}
+
+fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> f64 {
+	let oc = r.origin() - center;
+	let a = r.direction().length_squared();
+	let half_b = Vec3::dot(&oc, &r.direction());
+	let c = oc.length_squared() - (radius * radius);
+	let discriminant = half_b * half_b - a * c;
+
+	if discriminant < 0.0 {
+		-1.
+	} else {
+		(-half_b - discriminant.sqrt()) / a
+	}
 }
