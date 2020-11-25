@@ -38,7 +38,7 @@ impl Vec3 {
 			+ self.inner[2] * self.inner[2]
 	}
 
-	pub fn dot(u: &Self, v: &Self) -> f64 {
+	pub fn dot(u: Self, v: Self) -> f64 {
 		u.inner[0] * v.inner[0] + u.inner[1] * v.inner[1] + u.inner[2] * v.inner[2]
 	}
 
@@ -70,7 +70,7 @@ impl ops::Add for Vec3 {
 impl ops::Sub for Vec3 {
 	type Output = Self;
 
-	fn sub(self, rhs: Self) -> Self {
+	fn sub(self, rhs: Self) -> Self::Output {
 		Self::from(
 			self.inner[0] - rhs.inner[0],
 			self.inner[1] - rhs.inner[1],
@@ -128,6 +128,14 @@ impl ops::Div<f64> for Vec3 {
 
 	fn div(self, t: f64) -> Self {
 		self * (1. / t)
+	}
+}
+
+impl ops::Neg for Vec3 {
+	type Output = Self;
+
+	fn neg(self) -> Self::Output {
+		Self::from(-self.inner[0], -self.inner[1], -self.inner[2])
 	}
 }
 
