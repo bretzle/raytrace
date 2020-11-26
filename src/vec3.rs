@@ -1,5 +1,7 @@
 use std::ops;
 
+use crate::utils::random;
+
 pub type Point3 = Vec3;
 pub type Color = Vec3;
 
@@ -11,6 +13,16 @@ pub struct Vec3 {
 impl Vec3 {
 	pub fn from(a: f64, b: f64, c: f64) -> Self {
 		Self { inner: [a, b, c] }
+	}
+
+	pub fn random() -> Self {
+		Self::random_range(0.0, 1.0)
+	}
+
+	pub fn random_range(min: f64, max: f64) -> Self {
+		Self {
+			inner: [random(min, max), random(min, max), random(min, max)],
+		}
 	}
 
 	#[inline]
@@ -52,6 +64,29 @@ impl Vec3 {
 
 	pub fn unit(v: Self) -> Vec3 {
 		v / v.length()
+	}
+
+	pub fn random_in_unit_sphere() -> Vec3 {
+		loop {
+			let p = Vec3::random_range(-1., 1.);
+			if p.length_squared() >= 1.0 {
+				continue;
+			}
+			return p;
+		}
+	}
+
+	pub fn random_unit_vector() -> Vec3 {
+		Self::unit(Self::random_in_unit_sphere())
+	}
+
+	pub fn random_in_hemisphere(normal: Self) -> Self {
+		let in_unit_sphere = Self::random_in_unit_sphere();
+		if Self::dot(in_unit_sphere, normal) > 0.0 {
+			in_unit_sphere
+		} else {
+			-in_unit_sphere
+		}
 	}
 }
 
