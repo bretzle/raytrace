@@ -1,8 +1,13 @@
 pub mod list;
 pub mod sphere;
 
+use std::rc::Rc;
+
 use crate::{
+	material::Lambertian,
+	material::Material,
 	ray::Ray,
+	vec3::Color,
 	vec3::{Point3, Vec3},
 };
 
@@ -10,6 +15,7 @@ use crate::{
 pub struct HitRecord {
 	pub p: Point3,
 	pub normal: Vec3,
+	pub mat_ptr: Rc<dyn Material>,
 	pub t: f64,
 	pub front_face: bool,
 }
@@ -30,6 +36,7 @@ impl Default for HitRecord {
 		Self {
 			p: Point3::default(),
 			normal: Vec3::default(),
+			mat_ptr: Rc::new(Lambertian::new(Color::default())),
 			t: 0.,
 			front_face: true,
 		}
