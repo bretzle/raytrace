@@ -1,5 +1,7 @@
+pub mod canvas;
 pub mod color;
 pub mod tuple;
+pub mod utils;
 
 const EPSILON: f64 = 0.00001;
 
