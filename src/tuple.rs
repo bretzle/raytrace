@@ -134,4 +134,3 @@ impl From<[f64; 4]> for Tuple {
 		}
 	}
 }
-

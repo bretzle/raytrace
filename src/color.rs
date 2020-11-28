@@ -1,5 +1,6 @@
 use std::ops;
 
+#[derive(Debug, Copy, Clone)]
 pub struct Color {
 	pub r: f64,
 	pub g: f64,
@@ -9,6 +10,14 @@ pub struct Color {
 impl Color {
 	pub fn new(r: f64, g: f64, b: f64) -> Color {
 		Color { r, g, b }
+	}
+}
+
+impl PartialEq for Color {
+	fn eq(&self, other: &Self) -> bool {
+		super::approx_eq(self.r, other.r)
+			&& super::approx_eq(self.g, other.g)
+			&& super::approx_eq(self.b, other.b)
 	}
 }
 
