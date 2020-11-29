@@ -1,4 +1,4 @@
-use std::{ ops::Index, ops::IndexMut};
+use std::{ops::Index, ops::IndexMut};
 
 use crate::{
 	color::{Color, BLACK},

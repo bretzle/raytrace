@@ -1,5 +1,7 @@
 use std::ops;
 
+use crate::matrix::*;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Tuple {
 	pub x: f64,
@@ -52,6 +54,10 @@ impl Tuple {
 
 	pub fn reflect(&self, normal: Tuple) -> Self {
 		*self - normal * 2. * self.dot(&normal)
+	}
+
+	pub fn to_matrix(self) -> Matrix<f64, M4, M1> {
+		vec![self.x, self.y, self.z, self.w].into()
 	}
 }
 
