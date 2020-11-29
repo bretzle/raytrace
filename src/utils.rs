@@ -41,3 +41,59 @@ pub fn clamp_and_normalize(num: f64, max: usize) -> usize {
 		.try_into()
 		.unwrap()
 }
+
+/// Trait that provides equivalence for floating-point based types
+pub trait ApproxEq<Rhs = Self> {
+	/// Maximum allowed error such that two instances are regarded as being equal.
+	fn approx_eq(self, other: Rhs) -> bool;
+}
+
+pub const EPSILON_F64: f64 = 0.1e-4;
+impl ApproxEq for f64 {
+	fn approx_eq(self, other: Self) -> bool {
+		(self - other).abs() < EPSILON_F64
+	}
+}
+
+pub const EPSILON_F32: f32 = 0.1e-4;
+impl ApproxEq for f32 {
+	fn approx_eq(self, other: Self) -> bool {
+		(self - other).abs() < EPSILON_F32
+	}
+}
+
+/// Adaption of assert_eq from the stdlib to work with assert_eq rather than std::ops::Eq::eq
+#[macro_export]
+macro_rules! assert_approx_eq {
+    ($left:expr, $right:expr) => ({
+        use $crate::utils::ApproxEq;
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !((left_val).approx_eq(*right_val)) {
+                    // The reborrows below are intentional. Without them, the stack slot for the
+                    // borrow is initialized even before the values are compared, leading to a
+                    // noticeable slow down.
+                    panic!(r#"assertion failed: `(left ≈ right)`
+  left: `{:?}`,
+ right: `{:?}`"#, &*left_val, &*right_val)
+                }
+            }
+        }
+    });
+    ($left:expr, $right:expr, $($arg:tt)+) => ({
+        use $crate::utils::ApproxEq;
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                if !((left_val).approx_eq(*right_val)) {
+                    // The reborrows below are intentional. Without them, the stack slot for the
+                    // borrow is initialized even before the values are compared, leading to a
+                    // noticeable slow down.
+                    panic!(r#"assertion failed: `(left ≈ right)`
+  left: `{:?}`,
+ right: `{:?}`: {}"#, &*left_val, &*right_val,
+                           format_args!($($arg)+))
+                }
+            }
+        }
+    });
+}

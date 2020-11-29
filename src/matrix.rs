@@ -1,11 +1,15 @@
 use std::{
-	fmt, iter::Sum, marker::PhantomData, ops::Index, ops::IndexMut, ops::Mul, unimplemented,
+	fmt,
+	iter::Sum,
+	marker::PhantomData,
+	ops::{DivAssign, Index, IndexMut, Mul},
+	unimplemented,
 };
 
 use fmt::Debug;
 use num_traits::{Num, One, Signed, Zero};
 
-use crate::tuple::Tuple;
+use crate::{utils::ApproxEq, tuple::Tuple};
 
 pub trait Dim {
 	const SIZE: usize;
@@ -100,6 +104,11 @@ where
 		self.data.iter()
 	}
 
+	/// Iterate over all elements mutably
+	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+		self.data.iter_mut()
+	}
+
 	/// Iterate over the ith row of the matrix
 	pub fn iter_row(&self, i: usize) -> impl Iterator<Item = &T> {
 		self.iter().skip(i * N::SIZE).take(N::SIZE)
@@ -118,6 +127,14 @@ where
 	/// Iterate over all rows of the matrix
 	pub fn iter_cols(&self) -> impl Iterator<Item = impl Iterator<Item = &T>> {
 		(0..N::SIZE).map(move |j| self.iter_col(j))
+	}
+
+	/// Iterate over 3-tuples (i, j, self[(i,j)])
+	pub fn iter_indexed(&self) -> impl Iterator<Item = (usize, usize, &T)> {
+		self.iter_rows()
+			.enumerate()
+			.map(|(i, iter)| iter.enumerate().map(move |(j, x)| (i, j, x)))
+			.flatten()
 	}
 }
 
@@ -286,6 +303,73 @@ where
 	}
 }
 
+impl<T, MA, N, NB> Mul<&Matrix<T, N, NB>> for Matrix<T, MA, N>
+where
+	T: Mul + Sum<<T as Mul>::Output> + Copy,
+	MA: Dim,
+	N: Dim,
+	NB: Dim,
+{
+	type Output = Matrix<T, MA, NB>;
+
+	fn mul(self, rhs: &Matrix<T, N, NB>) -> Self::Output {
+		let mut new = Matrix::new_uninitialized();
+		for row in self.iter_rows() {
+			let row = row.collect::<Vec<_>>();
+			for col in rhs.iter_cols() {
+				let e = row.iter().zip(col).map(|(r, c)| **r * *c).sum();
+				new.data.push(e);
+			}
+		}
+		new
+	}
+}
+
+impl<T, MA, N, NB> Mul<Matrix<T, N, NB>> for &Matrix<T, MA, N>
+where
+	T: Mul + Sum<<T as Mul>::Output> + Copy,
+	MA: Dim,
+	N: Dim,
+	NB: Dim,
+{
+	type Output = Matrix<T, MA, NB>;
+
+	fn mul(self, rhs: Matrix<T, N, NB>) -> Self::Output {
+		let mut new = Matrix::new_uninitialized();
+		for row in self.iter_rows() {
+			let row = row.collect::<Vec<_>>();
+			for col in rhs.iter_cols() {
+				let e = row.iter().zip(col).map(|(r, c)| **r * *c).sum();
+				new.data.push(e);
+			}
+		}
+		new
+	}
+}
+
+impl<T, MA, N, NB> Mul<&Matrix<T, N, NB>> for &Matrix<T, MA, N>
+where
+	T: Mul + Sum<<T as Mul>::Output> + Copy,
+	MA: Dim,
+	N: Dim,
+	NB: Dim,
+{
+	type Output = Matrix<T, MA, NB>;
+
+	fn mul(self, rhs: &Matrix<T, N, NB>) -> Self::Output {
+		let mut new = Matrix::new_uninitialized();
+		for row in self.iter_rows() {
+			let row = row.collect::<Vec<_>>();
+			for col in rhs.iter_cols() {
+				let e = row.iter().zip(col).map(|(r, c)| **r * *c).sum();
+				new.data.push(e);
+			}
+		}
+		new
+	}
+}
+
+
 pub trait Determinant<T> {
 	fn minor(&self, i: usize, j: usize) -> T;
 	fn cofactor(&self, i: usize, j: usize) -> T;
@@ -343,9 +427,7 @@ impl<T: Num + Copy + Signed + Sum> Determinant<T> for Matrix<T, M4, M4> {
 	}
 
 	fn det(&self) -> T {
-		(0..4)
-			.map(|j| self[(0, j)] * self.cofactor(0, j))
-			.sum()
+		(0..4).map(|j| self[(0, j)] * self.cofactor(0, j)).sum()
 	}
 }
 
@@ -418,5 +500,39 @@ where
 			.copied()
 			.collect::<Vec<T>>();
 		m
+	}
+}
+
+impl<T, M> Matrix<T, M, M>
+where
+	T: Num + Copy + DivAssign,
+	M: Dim,
+	Self: Determinant<T>,
+{
+	pub fn invert(&self) -> Option<Self> {
+		let det = self.det();
+		if det == T::zero() {
+			None
+		} else {
+			let mut m = Self::new_uninitialized();
+			m.data = self
+				.iter_indexed()
+				.map(|(i, j, _)| self.cofactor(i, j))
+				.collect::<Vec<_>>();
+			let mut m2 = m.transpose();
+			let _ = m2.iter_mut().map(|x| *x /= det).collect::<Vec<_>>();
+			Some(m2)
+		}
+	}
+}
+
+impl<T, M, N> ApproxEq for &Matrix<T, M, N>
+where
+	T: ApproxEq + Copy,
+	M: Dim,
+	N: Dim,
+{
+	fn approx_eq(self, other: Self) -> bool {
+		self.iter().zip(other.iter()).all(|(l, r)| l.approx_eq(*r))
 	}
 }
