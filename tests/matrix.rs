@@ -155,3 +155,86 @@ fn transpose_identity() {
 
 	assert_eq!(a.transpose(), expected);
 }
+
+#[test]
+fn det_2x2() {
+	let a = matrix![ M2, M2 =>
+		1, 5;
+		-3, 2;
+	];
+
+	assert_eq!(a.det(), 17);
+}
+
+#[test]
+fn submatrix() {
+	let a = matrix![ M4, M4 =>
+		-6, 1,  1, 6;
+		-8, 5,  8, 6;
+		-1, 0,  8, 2;
+		-7, 1, -1, 1;
+	];
+	let expected = matrix! [ M3, M3 =>
+		-6,  1, 6;
+		-8,  8, 6;
+		-7, -1, 1;
+	];
+
+	assert_eq!(a.submatrix(2, 1), expected);
+}
+
+#[test]
+fn minor() {
+	let a = matrix![ M3, M3 =>
+		3,  5,  0;
+		2, -1, -7;
+		6, -1,  5;
+	];
+
+	assert_eq!(a.submatrix(1, 0).det(), 25);
+	assert_eq!(a.minor(1, 0), 25);
+}
+
+#[test]
+fn cofactor() {
+	let a = matrix![ M3, M3 =>
+		3,  5,  0;
+		2, -1, -7;
+		6, -1,  5;
+	];
+
+	assert_eq!(a.minor(0, 0), -12);
+	assert_eq!(a.cofactor(0, 0), -12);
+	assert_eq!(a.minor(1, 0), 25);
+	assert_eq!(a.cofactor(1, 0), -25);
+}
+
+#[test]
+fn det_3x3() {
+	let a = matrix![ M3, M3 =>
+		 1, 2,  6;
+		-5, 8, -4;
+		 2, 6,  4;
+	];
+
+	assert_eq!(a.cofactor(0, 0), 56);
+	assert_eq!(a.cofactor(0, 1), 12);
+	assert_eq!(a.cofactor(0, 2), -46);
+	assert_eq!(a.det(), -196);
+}
+
+#[test]
+fn det_4x4() {
+	let a = matrix![ M4, M4 =>
+		-2, -8,  3,  5;
+		-3,  1,  7,  3;
+		 1,  2, -9,  6;
+		-6,  7,  7, -9;
+	];
+
+	assert_eq!(a.cofactor(0, 0), 690);
+	assert_eq!(a.cofactor(0, 1), 447);
+	assert_eq!(a.cofactor(0, 2), 210);
+	assert_eq!(a.cofactor(0, 3), 51);
+	assert_eq!(a.det(), -4071);
+}
