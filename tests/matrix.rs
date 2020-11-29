@@ -108,3 +108,50 @@ fn multiply_matrix_by_tuple() {
 
 	assert_eq!(expected, actual.to_tuple());
 }
+
+#[test]
+fn multiply_matrix_by_identity() {
+	let a: Matrix4x4<i32> = matrix![ M4, M4 =>
+		0, 1, 2, 4;
+		1, 2, 4, 8;
+		2, 4, 8, 16;
+		4, 8, 16, 32;
+	];
+	let actual = a.clone() * Matrix::identity();
+
+	assert_eq!(a, actual);
+}
+
+#[test]
+fn multiply_identity_by_tuple() {
+	let a = Tuple::new(1., 2., 3., 4.);
+	let actual = a.to_matrix() * Matrix::identity();
+
+	assert_eq!(actual, a.to_matrix());
+}
+
+#[test]
+fn transpose_matrix() {
+	let a = matrix![ M4, M4 =>
+		0, 9, 3, 0;
+		9, 8, 0, 8;
+		1, 8, 5, 3;
+		0, 0, 5, 8;
+	];
+	let expected = matrix![ M4, M4 =>
+		0, 9, 1, 0;
+		9, 8, 8, 0;
+		3, 0, 5, 5;
+		0, 8, 3, 8;
+	];
+
+	assert_eq!(a.transpose(), expected);
+}
+
+#[test]
+fn transpose_identity() {
+	let a: Matrix4x4<i32> = Matrix::identity();
+	let expected = a.clone();
+
+	assert_eq!(a.transpose(), expected);
+}

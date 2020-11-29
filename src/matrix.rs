@@ -1,15 +1,20 @@
 use std::{fmt, iter::Sum, marker::PhantomData, ops::Index, ops::IndexMut, ops::Mul};
 
 use fmt::Debug;
+use num_traits::{One, Zero};
 
 use crate::tuple::Tuple;
 
 pub trait Dim {
 	const SIZE: usize;
 }
+#[derive(Debug, Copy, Clone, Default)]
 pub struct M1;
+#[derive(Debug, Copy, Clone, Default)]
 pub struct M2;
+#[derive(Debug, Copy, Clone, Default)]
 pub struct M3;
+#[derive(Debug, Copy, Clone, Default)]
 pub struct M4;
 impl Dim for M1 {
 	const SIZE: usize = 1;
@@ -104,18 +109,35 @@ where
 	}
 }
 
+impl<T, M, N> Matrix<T, M, N>
+where
+	T: Copy,
+	M: Dim,
+	N: Dim,
+{
+	pub fn transpose(&self) -> Matrix<T, N, M> {
+		let mut v = Vec::with_capacity(M::SIZE * N::SIZE);
+        for i in 0..M::SIZE {
+            for j in 0..N::SIZE {
+                v.push(self[(j, i)]);
+            }
+        }
+        Matrix::from(v)
+	}
+}
+
 impl<T, M> Matrix<T, M, M>
 where
-	T: One + Zero,
+	T: One + Zero + Copy,
 	M: Dim,
 {
 	pub fn identity() -> Self {
 		let mut m = Matrix::new_uninitialized();
-        m.data = vec![T::zero(); M::val() * M::val()];
-        for i in 0..M::val() {
-            m[(i, i)] = T::one();
-        }
-        m
+		m.data = vec![T::zero(); M::SIZE * M::SIZE];
+		for i in 0..M::SIZE {
+			m[(i, i)] = T::one();
+		}
+		m
 	}
 }
 
